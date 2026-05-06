@@ -31,6 +31,10 @@ app.use(
 
 createTables();
 
+// Importing routes
+import authRoutes from "./routes/authRoutes.js";
+app.use("/api/v1/auth", authRoutes);
+
 app.use(errorMiddleware);
 
 export default app;
