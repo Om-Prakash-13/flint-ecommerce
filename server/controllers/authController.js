@@ -7,6 +7,7 @@ import { sendEmail } from "../utils/sendEmails.js";
 import { generateResetPasswordToken } from "../utils/generateResetPasswordToken.js";
 import { generateForgotPasswordEmailTemplate } from "../utils/generateForgotPasswordEmailTemplate.js";
 import crypto from "crypto";
+import {v2 as cloudinary} from "cloudinary";
 
 export const register = catchAsyncError(async (req, res, next) => {
     const {name, email, password} = req.body;
@@ -95,7 +96,7 @@ export const forgotPassword = catchAsyncError(async (req, res, next) => {
         });
         res.status(200).json({
             success: true, 
-            message: `Email sent to ${user.email} successfully.`
+            message: `If an account exists, a reset link has been sent.`
         })
     } catch (error) {
         await database.query(
@@ -132,4 +133,77 @@ export const resetPassword = catchAsyncError(async (req, res, next) => {
     );
 
     sendToken(updatedUser.rows[0], 200, "Password reset successfully", res);
+})
+
+export const updatePassword = catchAsyncError(async(req, res, next) => {
+    const {currentPassword, newPassword} = req.body;
+
+    const user = await database.query(
+        `SELECT id, name, email, password, role, created_at FROM users WHERE id = $1`,
+        [req.user.id]
+    );
+
+    if (user.rows.length === 0) return next(new FlintError("User not found", 404))
+
+    const isPasswordMatched = await bcrypt.compare(currentPassword, user.rows[0].password);
+
+    if(!isPasswordMatched){
+        return next(new FlintError("Current password is incorrect", 400));
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    await database.query(
+        "UPDATE users SET password = $1 WHERE id = $2",
+        [hashedNewPassword, req.user.id]
+    );
+
+    res.status(200).json({
+        success: true,
+        message: "Password updated successfully"
+    });
+});
+
+export const updateProfile = catchAsyncError(async(req, res, next) => {
+    const {name, email} = req.body;
+
+    let avatarData = {};
+
+    if(req.files && req.files.avatar){
+        const {avatar} = req.files;
+        if(req.user?.avatar?.public_id){
+            await cloudinary.uploader.destroy(req.user.avatar.public_id);
+        }
+
+        const newProfilePicture = await cloudinary.uploader.upload(avatar.tempFilePath, {
+            folder: "flint-ecommerce/avatars",
+            width: 150,
+            crop: "scale",
+        });
+
+        avatarData = {
+            public_id: newProfilePicture.public_id,
+            url: newProfilePicture.secure_url
+        };
+    }
+
+    let user;
+    if(Object.keys(avatarData).length === 0){
+        user = await database.query(
+            "UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, name, email, avatar, role, created_at",
+            [name, email, req.user.id]
+        );
+    }else{
+        user = await database.query(
+            "UPDATE users SET name = $1, email = $2, avatar = $3 WHERE id = $4 RETURNING id, name, email, avatar, role, created_at",
+            [name, email, JSON.stringify(avatarData), req.user.id]
+        )
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Profile updated successfully",
+        user: user.rows[0]
+    });
+
 })
