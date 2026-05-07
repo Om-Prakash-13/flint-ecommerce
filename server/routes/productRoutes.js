@@ -1,5 +1,5 @@
 import express from "express";
-import { createProduct } from "../controllers/productController.js";
+import { createProduct, fetchAllProducts } from "../controllers/productController.js";
 import {
   authorizeRoles,
   isAuthenticated,
@@ -17,6 +17,7 @@ router.post(
   createProduct,
 );
 
+router.get("/all", fetchAllProducts);
 
 
 export default router;
