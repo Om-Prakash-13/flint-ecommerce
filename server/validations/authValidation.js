@@ -54,3 +54,40 @@ export const loginSchema = Joi.object({
             "string.max": "Password cannot exceed 30 characters."
         })
 }); 
+
+export const forgotPasswordSchema = Joi.object({
+    email: Joi.string()
+        .trim()
+        .lowercase()
+        .email()
+        .required()
+        .messages({
+            "any.required": "Email is required.",
+            "string.empty": "Email is required.",
+            "string.email": "Please enter a valid email."
+        })
+});
+
+export const resetPasswordSchema = Joi.object({
+    password: Joi.string()
+        .trim()
+        .min(8)
+        .max(30)
+        .required()
+        .messages({
+            "any.required": "Password is required.",
+            "string.empty": "Password is required.",
+            "string.min": "Password must be at least 8 characters.",
+            "string.max": "Password cannot exceed 30 characters."
+        }),
+
+    confirmPassword: Joi.string()
+        .trim()
+        .required()
+        .valid(Joi.ref("password"))
+        .messages({
+            "any.required": "Confirm password is required.",
+            "string.empty": "Confirm password is required.",
+            "any.only": "Password and confirm password do not match."
+        })
+});

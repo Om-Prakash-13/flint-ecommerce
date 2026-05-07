@@ -3,6 +3,10 @@ import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import database from "../database/db.js";
 import bcrypt from "bcrypt";
 import { sendToken } from "../utils/jwtToken.js";
+import { sendEmail } from "../utils/sendEmails.js";
+import { generateResetPasswordToken } from "../utils/generateResetPasswordToken.js";
+import { generateForgotPasswordEmailTemplate } from "../utils/generateForgotPasswordEmailTemplate.js";
+import crypto from "crypto";
 
 export const register = catchAsyncError(async (req, res, next) => {
     const {name, email, password} = req.body;
@@ -16,6 +20,7 @@ export const register = catchAsyncError(async (req, res, next) => {
     sendToken(user.rows[0], 201, "User registered successfully", res);
     
 })
+
 export const login = catchAsyncError(async (req, res, next) => {
     const {email, password} = req.body;
 
@@ -36,6 +41,7 @@ export const login = catchAsyncError(async (req, res, next) => {
     const { password: _, ...userWithoutPassword } = user.rows[0];
     sendToken(userWithoutPassword, 200, "User logged in successfully", res);
 })
+
 export const getUser = catchAsyncError(async (req, res, next) => {
     const user = req.user;
     res.status(200).json({
@@ -43,6 +49,7 @@ export const getUser = catchAsyncError(async (req, res, next) => {
         user
     });
 })
+
 export const logout = catchAsyncError(async (req, res, next) => {
     res.status(200).cookie("token", null, {
         expires: new Date(Date.now()),
@@ -51,4 +58,78 @@ export const logout = catchAsyncError(async (req, res, next) => {
         success: true,
         message: "Logged out successfully"
     });
+})
+
+export const forgotPassword = catchAsyncError(async (req, res, next) => {
+    const {email} = req.body;
+    
+    let userResult = await database.query(
+        `SELECT id, name, email FROM users WHERE email = $1`,
+        [email]
+    );
+
+    if (userResult.rows.length === 0) {
+        return res.status(200).json({
+            success: true,
+            message: "If an account exists, a reset link has been sent."
+        });
+    }
+
+    const user = userResult.rows[0];
+
+    const { resetToken, hashedToken, tokenExpiration } = generateResetPasswordToken();
+
+    await database.query(
+        `UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE email = $3`,
+        [hashedToken, new Date(tokenExpiration), email]
+    )
+
+    const resetPasswordUrl = `${process.env.FRONTEND_URL}/password/reset/${resetToken}`;
+    const message = generateForgotPasswordEmailTemplate(resetPasswordUrl);
+
+    try {
+        await sendEmail({
+            email: user.email,
+            subject: "Flint Ecommerce Password Reset Request",
+            message
+        });
+        res.status(200).json({
+            success: true, 
+            message: `Email sent to ${user.email} successfully.`
+        })
+    } catch (error) {
+        await database.query(
+            `UPDATE users SET reset_password_token = NULL, reset_password_expires = NULL WHERE email = $1`,
+            [email]
+        );
+        return next(new FlintError("Failed to send email. Please try again later.", 500));
+    }
+
+})
+
+export const resetPassword = catchAsyncError(async (req, res, next) => {
+    const token = req.params.token;
+    const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await database.query(
+        `SELECT id, name, email, reset_password_token, reset_password_expires FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW()`,
+        [resetPasswordToken]
+    );
+
+    if (user.rows.length === 0){
+        return next(new FlintError("Invalid or expired password reset token", 400));
+    }
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const updatedUser = await database.query(
+        `UPDATE users
+            SET password = $1,
+            reset_password_token = NULL,
+            reset_password_expires = NULL
+        WHERE id = $2
+        RETURNING id, name, email, role, created_at`,
+        [hashedPassword, user.rows[0].id]
+    );
+
+    sendToken(updatedUser.rows[0], 200, "Password reset successfully", res);
 })
