@@ -1,11 +1,11 @@
 import express from "express";
-import { createProduct, deleteProduct, fetchAllProducts, fetchSingleProduct, updateProduct } from "../controllers/productController.js";
+import { createProduct, createProductReview, deleteProduct, deleteReview, fetchAllProducts, fetchSingleProduct, updateProduct } from "../controllers/productController.js";
 import {
   authorizeRoles,
   isAuthenticated,
 } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validate.js";
-import { createProductSchema, updateProductSchema } from "../validations/productValidation.js";
+import { createProductReviewSchema, createProductSchema, updateProductSchema } from "../validations/productValidation.js";
 
 const router = express.Router();
 
@@ -36,4 +36,16 @@ router.delete(
 
 router.get("/:productId", fetchSingleProduct);
 
+router.post(
+  "/:productId/review",
+  isAuthenticated,
+  validate(createProductReviewSchema),
+  createProductReview
+);
+
+router.delete(
+  "/:productId/review",
+  isAuthenticated,
+  deleteReview
+)
 export default router;

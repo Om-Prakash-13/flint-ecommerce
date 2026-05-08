@@ -107,3 +107,30 @@ export const updateProductSchema = Joi.object({
             "number.min": "Stock cannot be negative."
         })
 });
+
+export const createProductReviewSchema = Joi.object({
+    rating: Joi.number()
+        .integer()
+        .min(1)
+        .max(5)
+        .required()
+        .messages({
+            "any.required": "Rating is required.",
+            "number.base": "Rating must be a number.",
+            "number.integer": "Rating must be an integer.",
+            "number.min": "Rating must be at least 1.",
+            "number.max": "Rating cannot exceed 5."
+        }),
+
+    comment: Joi.string()
+        .trim()
+        .min(10)
+        .max(2000)
+        .required()
+        .messages({
+            "any.required": "Comment is required.",
+            "string.empty": "Comment is required.",
+            "string.min": "Comment must be at least 10 characters.",
+            "string.max": "Comment cannot exceed 2000 characters."
+        })
+});
