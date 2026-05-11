@@ -1,5 +1,5 @@
 import express from "express";
-import { createProduct, createProductReview, deleteProduct, deleteReview, fetchAllProducts, fetchSingleProduct, updateProduct } from "../controllers/productController.js";
+import { createProduct, createProductReview, deleteProduct, deleteReview, fetchAIFilteredProducts, fetchAllProducts, fetchSingleProduct, updateProduct } from "../controllers/productController.js";
 import {
   authorizeRoles,
   isAuthenticated,
@@ -48,4 +48,11 @@ router.delete(
   isAuthenticated,
   deleteReview
 )
+
+router.get(
+  "/ai/recommendation",
+  fetchAIFilteredProducts
+)
+
+
 export default router;

@@ -2,6 +2,8 @@ import { catchAsyncError } from "../middlewares/catchAsyncError.js";
 import FlintError from "../middlewares/errorMiddleware.js";
 import database from "../database/db.js";
 import { v2 as cloudinary } from "cloudinary";
+import { stopWords } from "../utils/stopWords.js";
+import { getAIRecomendation } from "../utils/getAIRecomendation.js";
 
 export const createProduct = catchAsyncError(async (req, res, next) => {
   const { name, description, price, category, stock } = req.body;
@@ -224,7 +226,7 @@ export const updateProduct = catchAsyncError(async (req, res, next) => {
 });
 
 export const deleteProduct = catchAsyncError(async (req, res, next) => {
-  const {productId} = req.params;
+  const { productId } = req.params;
 
   const product = await database.query("SELECT * FROM products WHERE id = $1", [
     productId,
@@ -241,33 +243,33 @@ export const deleteProduct = catchAsyncError(async (req, res, next) => {
   }
 
   const images = product.rows[0].images;
-  if(images && images.length > 0){
-    for (const image of images){
-        await cloudinary.uploader.destroy(image.public_id);
+  if (images && images.length > 0) {
+    for (const image of images) {
+      await cloudinary.uploader.destroy(image.public_id);
     }
   }
 
   const deleteResult = await database.query(
     "DELETE FROM products WHERE id = $1 RETURNING *",
-    [productId]
+    [productId],
   );
 
-  if(deleteResult.rowCount === 0){
+  if (deleteResult.rowCount === 0) {
     return next(new FlintError("Failed to delete product.", 500));
   }
 
   res.status(200).json({
     success: true,
     message: "Product deleted successfully",
-    deletedProduct: deleteResult.rows[0]
+    deletedProduct: deleteResult.rows[0],
   });
 });
 
 export const fetchSingleProduct = catchAsyncError(async (req, res, next) => {
-    const {productId} = req.params;
+  const { productId } = req.params;
 
-    const result = await database.query(
-        `
+  const result = await database.query(
+    `
             SELECT p.*,
                 COALESCE(
                     json_agg(
@@ -291,34 +293,32 @@ export const fetchSingleProduct = catchAsyncError(async (req, res, next) => {
                 WHERE p.id = $1
                 GROUP BY p.id
         `,
-        [productId]
-    );
+    [productId],
+  );
 
-    if (result.rows.length === 0) {
-        return next( new FlintError("Product not found", 404));
-    }
-    
-    res.status(200).json({
-        success: true,
-        message: "Product fetched successfully.",
-        product: result.rows[0]
-    });
+  if (result.rows.length === 0) {
+    return next(new FlintError("Product not found", 404));
+  }
 
-})
+  res.status(200).json({
+    success: true,
+    message: "Product fetched successfully.",
+    product: result.rows[0],
+  });
+});
 
 // Product Review APIs
 // ==================
 export const createProductReview = catchAsyncError(async (req, res, next) => {
-  const {productId} = req.params;
-  const {rating, comment} = req.body;
+  const { productId } = req.params;
+  const { rating, comment } = req.body;
   const user_id = req.user.id;
 
-  const product = await database.query(
-    "SELECT * FROM products WHERE id = $1",
-    [productId]
-  );
+  const product = await database.query("SELECT * FROM products WHERE id = $1", [
+    productId,
+  ]);
 
-  if(product.rows.length === 0){
+  if (product.rows.length === 0) {
     return next(new FlintError("Product not found.", 404));
   }
 
@@ -333,82 +333,151 @@ export const createProductReview = catchAsyncError(async (req, res, next) => {
     AND o.order_status = 'Delivered'
     LIMIT 1;
   `;
-  const {rows} = await database.query(purchaseCheckQuery, [user_id, productId]);
+  const { rows } = await database.query(purchaseCheckQuery, [
+    user_id,
+    productId,
+  ]);
 
-  if(rows.length === 0){
-    return next(new FlintError("You must purchase and receive the product before leaving a review.", 400));
+  if (rows.length === 0) {
+    return next(
+      new FlintError(
+        "You must purchase and receive the product before leaving a review.",
+        400,
+      ),
+    );
   }
 
   const hasAlreadyReviewed = await database.query(
     "SELECT * FROM reviews WHERE product_id = $1 AND user_id = $2",
-    [productId, user_id]
+    [productId, user_id],
   );
 
   let reviews;
-  if(hasAlreadyReviewed.rows.length > 0){
+  if (hasAlreadyReviewed.rows.length > 0) {
     reviews = await database.query(
       "UPDATE reviews SET rating = $1, comment = $2 WHERE product_id = $3 AND user_id = $4 RETURNING *",
-      [rating, comment, productId, user_id]
-    )
-  }
-  else{
+      [rating, comment, productId, user_id],
+    );
+  } else {
     reviews = await database.query(
       "INSERT INTO reviews (product_id, user_id, rating, comment) VALUES ($1, $2, $3, $4) RETURNING *",
-      [productId, user_id, rating, comment]
-    )
+      [productId, user_id, rating, comment],
+    );
   }
 
   // Update Average Ratings
   const allReviews = await database.query(
     "SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = $1",
-    [productId]
+    [productId],
   );
 
   const newAvgRating = allReviews.rows[0].avg_rating || 0;
 
   const updatedProduct = await database.query(
     "UPDATE products SET ratings = $1 WHERE id = $2 RETURNING *",
-    [newAvgRating, productId]
+    [newAvgRating, productId],
   );
 
   res.status(200).json({
     success: true,
-    message: hasAlreadyReviewed.rows.length > 0 ? "Review updated successfully." : "Review added successfully.",
+    message:
+      hasAlreadyReviewed.rows.length > 0
+        ? "Review updated successfully."
+        : "Review added successfully.",
     review: reviews.rows[0],
-    product: updatedProduct.rows[0]
+    product: updatedProduct.rows[0],
   });
-
 });
 
 export const deleteReview = catchAsyncError(async (req, res, next) => {
-  const {productId} = req.params;
+  const { productId } = req.params;
   const user_id = req.user.id;
 
   const review = await database.query(
     "DELETE FROM reviews WHERE product_id = $1 AND user_id = $2 RETURNING *",
-    [productId, user_id]
+    [productId, user_id],
   );
 
-  if(review.rows.length === 0){
+  if (review.rows.length === 0) {
     return next(new FlintError("Review not Found.", 404));
   }
 
   const allReviews = await database.query(
     "SELECT AVG(rating) as avg_rating FROM reviews WHERE product_id = $1",
-    [productId]
+    [productId],
   );
 
   const newAvgRating = allReviews.rows[0].avg_rating || 0;
 
   const updatedProduct = await database.query(
     "UPDATE products SET ratings = $1 WHERE id = $2 RETURNING *",
-    [newAvgRating, productId]
+    [newAvgRating, productId],
   );
 
   res.status(200).json({
     success: true,
     message: "Your review has been deleted successfully.",
     product: updatedProduct.rows[0],
-    review: review.rows[0]
+    review: review.rows[0],
   });
 });
+
+
+// AI Based Search API
+// ===================
+export const fetchAIFilteredProducts = catchAsyncError(
+  async (req, res, next) => {
+    const { userPrompt } = req.body;
+
+    if (!userPrompt) throw new FlintError("Provide a valid prompt.", 400);
+
+    const filterKeywords = (query) => {
+      return query
+        .toLowerCase()
+        .replace(/[^\w\s]/g, "")
+        .split(/\s+/)
+        .filter((word) => !stopWords.has(word))
+        .map((word) => `%${word}%`);
+    };
+
+    const keywords = filterKeywords(userPrompt);
+    // STEP1: Basic SQL Filtering
+    const result = await database.query(
+      `
+        SELECT * FROM products
+        WHERE name ILIKE ANY($1)
+        OR description ILIKE ANY($1)
+        OR category ILIKE ANY($1)
+        LIMIT 50
+      `,
+      [keywords]
+    );
+
+    const FilteredProducts = result.rows;
+    if(FilteredProducts.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No products found matching your prompt.",
+        products: []
+      });
+    }
+
+    // STEP-2: Ai Filtering
+    // const x = await getAIRecomendation(req, res, userPrompt, FilteredProducts);
+    // console.log(x, x.success, x.products);
+    // if(!success){
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: "No product matched the user's request",
+    //     products: []
+    //   })
+    // }
+
+    res.status(200).json({
+      success: true,
+      message: "Products fetched successfully.",
+      products: result.rows,
+    });
+  
+  },
+);
