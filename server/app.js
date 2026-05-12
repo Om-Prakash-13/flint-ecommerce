@@ -38,6 +38,9 @@ app.use("/api/v1/auth", authRoutes);
 import productRoutes from "./routes/productRoutes.js";
 app.use("/api/v1/product", productRoutes);
 
+import adminRoutes from "./routes/adminRoutes.js"
+app.use("/api/v1/admin", adminRoutes);
+
 app.use(errorMiddleware);
 
 export default app;
