@@ -38,8 +38,11 @@ app.use("/api/v1/auth", authRoutes);
 import productRoutes from "./routes/productRoutes.js";
 app.use("/api/v1/product", productRoutes);
 
-import adminRoutes from "./routes/adminRoutes.js"
+import adminRoutes from "./routes/adminRoutes.js";
 app.use("/api/v1/admin", adminRoutes);
+
+import orderRoutes from "./routes/orderRoutes.js"
+app.use("/api/v1/order", orderRoutes);
 
 app.use(errorMiddleware);
 
