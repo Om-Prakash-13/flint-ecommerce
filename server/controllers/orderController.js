@@ -228,12 +228,12 @@ export const fetchAllOrders = catchAsyncError(async (req, res) => {
   const offset = (page - 1) * limit;
 
   const { rows: totalRows } = await database.query(
-    `SELECT COUNT(*) FROM orders`
+    `SELECT COUNT(*) FROM orders`,
   );
   const totalOrders = parseInt(totalRows[0].count);
 
   const { rows: revenueRows } = await database.query(
-    `SELECT COALESCE(SUM(total_price), 0) AS revenue FROM orders`
+    `SELECT COALESCE(SUM(total_price), 0) AS revenue FROM orders`,
   );
   const totalRevenue = Number(revenueRows[0].revenue);
 
@@ -256,7 +256,7 @@ export const fetchAllOrders = catchAsyncError(async (req, res) => {
     ORDER BY o.created_at DESC
     LIMIT $1 OFFSET $2
     `,
-    [limit, offset]
+    [limit, offset],
   );
 
   return res.status(200).json({
@@ -266,7 +266,7 @@ export const fetchAllOrders = catchAsyncError(async (req, res) => {
     totalOrders,
     totalPages: Math.ceil(totalOrders / limit),
     totalRevenue,
-    orders: result.rows
+    orders: result.rows,
   });
 });
 
@@ -274,17 +274,16 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
   const { orderId } = req.params;
   const { order_status } = req.body;
 
-  // Define valid status flow
   const allowedTransitions = {
     Processing: ["Shipped", "Cancelled"],
     Shipped: ["Delivered"],
     Delivered: [],
     Cancelled: [],
   };
-  
-  // Get current order status
+
+  // 1. Fetch order
   const { rows } = await database.query(
-    `SELECT id, order_status FROM orders WHERE id = $1`,
+    `SELECT id, buyer_id, order_status FROM orders WHERE id = $1`,
     [orderId]
   );
 
@@ -294,7 +293,12 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
 
   const order = rows[0];
 
-  // Block updates if order is already finished or cancelled
+  // 2. Check ownership
+  if (req.user.role !== "Admin" && order.buyer_id !== req.user.id) {
+    throw new FlintError("Order not found.", 404);
+  }
+
+  // 3. Check for finished states
   if (order.order_status === "Delivered" || order.order_status === "Cancelled") {
     throw new FlintError(
       `${order.order_status} orders cannot be updated.`,
@@ -302,7 +306,18 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
     );
   }
 
-  // Check if the new status is allowed
+  // 4. Customer-specific rules
+  if (req.user.role !== "Admin") {
+    if (order_status !== "Cancelled") {
+      throw new FlintError("You are not authorized.", 403);
+    }
+
+    if (order.order_status !== "Processing") {
+      throw new FlintError("Order can no longer be cancelled.", 400);
+    }
+  }
+
+  // 5. Validate status flow
   const allowedNextStatuses = allowedTransitions[order.order_status];
 
   if (!allowedNextStatuses.includes(order_status)) {
@@ -312,7 +327,7 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
     );
   }
 
-  // Apply update to database
+  // 6. Update database
   await database.query(
     `UPDATE orders SET order_status = $1 WHERE id = $2`,
     [order_status, orderId]
