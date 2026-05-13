@@ -42,7 +42,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 app.use("/api/v1/admin", adminRoutes);
 
 import orderRoutes from "./routes/orderRoutes.js"
-app.use("/api/v1/order", orderRoutes);
+app.use("/api/v1/orders", orderRoutes);
 
 import paymentRoutes from "./routes/paymentRoutes.js";
 app.use("/api/v1/payment", paymentRoutes);
