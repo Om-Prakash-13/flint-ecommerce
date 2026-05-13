@@ -44,6 +44,10 @@ app.use("/api/v1/admin", adminRoutes);
 import orderRoutes from "./routes/orderRoutes.js"
 app.use("/api/v1/order", orderRoutes);
 
+import paymentRoutes from "./routes/paymentRoutes.js";
+app.use("/api/v1/payment", paymentRoutes);
+
+
 app.use(errorMiddleware);
 
 export default app;
