@@ -221,3 +221,105 @@ export const fetchMyOrders = catchAsyncError(async (req, res) => {
     orders: result.rows,
   });
 });
+
+export const fetchAllOrders = catchAsyncError(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
+  const { rows: totalRows } = await database.query(
+    `SELECT COUNT(*) FROM orders`
+  );
+  const totalOrders = parseInt(totalRows[0].count);
+
+  const { rows: revenueRows } = await database.query(
+    `SELECT COALESCE(SUM(total_price), 0) AS revenue FROM orders`
+  );
+  const totalRevenue = Number(revenueRows[0].revenue);
+
+  const result = await database.query(
+    `
+    SELECT 
+      o.id, 
+      o.total_price, 
+      o.order_status, 
+      o.created_at,
+      u.id AS buyer_id, 
+      u.name AS buyer_name, 
+      u.email AS buyer_email,
+      COUNT(oi.id)::INTEGER AS total_items,
+      MIN(oi.image) AS preview_image
+    FROM orders o
+    JOIN users u ON o.buyer_id = u.id
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    GROUP BY o.id, u.id
+    ORDER BY o.created_at DESC
+    LIMIT $1 OFFSET $2
+    `,
+    [limit, offset]
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Orders fetched.",
+    currentPage: page,
+    totalOrders,
+    totalPages: Math.ceil(totalOrders / limit),
+    totalRevenue,
+    orders: result.rows
+  });
+});
+
+export const updateOrderStatus = catchAsyncError(async (req, res) => {
+  const { orderId } = req.params;
+  const { order_status } = req.body;
+
+  // Define valid status flow
+  const allowedTransitions = {
+    Processing: ["Shipped", "Cancelled"],
+    Shipped: ["Delivered"],
+    Delivered: [],
+    Cancelled: [],
+  };
+  
+  // Get current order status
+  const { rows } = await database.query(
+    `SELECT id, order_status FROM orders WHERE id = $1`,
+    [orderId]
+  );
+
+  if (rows.length === 0) {
+    throw new FlintError("Order not found.", 404);
+  }
+
+  const order = rows[0];
+
+  // Block updates if order is already finished or cancelled
+  if (order.order_status === "Delivered" || order.order_status === "Cancelled") {
+    throw new FlintError(
+      `${order.order_status} orders cannot be updated.`,
+      400
+    );
+  }
+
+  // Check if the new status is allowed
+  const allowedNextStatuses = allowedTransitions[order.order_status];
+
+  if (!allowedNextStatuses.includes(order_status)) {
+    throw new FlintError(
+      `Invalid status transition from ${order.order_status} to ${order_status}.`,
+      400
+    );
+  }
+
+  // Apply update to database
+  await database.query(
+    `UPDATE orders SET order_status = $1 WHERE id = $2`,
+    [order_status, orderId]
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: "Order status updated.",
+  });
+});
