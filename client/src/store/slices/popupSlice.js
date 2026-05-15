@@ -9,20 +9,38 @@ const popupSlice = createSlice({
     isCartOpen: false,
     isAIPopupOpen: false,
   },
+
   reducers: {
-    toggleAuthPopup(state){
+    // auth popup
+    toggleAuthPopup(state) {
       state.isAuthPopupOpen = !state.isAuthPopupOpen;
     },
-    toggleSidebar(state){
+
+    openAuthPopup(state) {
+      state.isAuthPopupOpen = true;
+    },
+
+    closeAuthPopup(state) {
+      state.isAuthPopupOpen = false;
+    },
+
+    // sidebar
+    toggleSidebar(state) {
       state.isSidebarOpen = !state.isSidebarOpen;
     },
-    toggleSearchBar(state){
+
+    // search
+    toggleSearchBar(state) {
       state.isSearchBarOpen = !state.isSearchBarOpen;
     },
-    toggleCart(state){
+
+    // cart
+    toggleCart(state) {
       state.isCartOpen = !state.isCartOpen;
     },
-    toggleAIModal(state){
+
+    // ai modal
+    toggleAIModal(state) {
       state.isAIPopupOpen = !state.isAIPopupOpen;
     },
   },
@@ -30,9 +48,12 @@ const popupSlice = createSlice({
 
 export const {
   toggleAuthPopup,
+  openAuthPopup,
+  closeAuthPopup,
   toggleSidebar,
   toggleSearchBar,
   toggleCart,
   toggleAIModal,
 } = popupSlice.actions;
+
 export default popupSlice.reducer;

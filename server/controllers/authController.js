@@ -14,7 +14,7 @@ export const register = catchAsyncError(async (req, res, next) => {
     
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await database.query(
-        `INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email, role, created_at`,
+        `INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email, role, avatar, created_at`,
         [name, email, hashedPassword]
     );
     
@@ -26,7 +26,7 @@ export const login = catchAsyncError(async (req, res, next) => {
     const {email, password} = req.body;
 
     const user = await database.query(
-        `SELECT id, name, email, role, password, created_at FROM users WHERE email = $1`,
+        `SELECT id, name, email, role, password, avatar, created_at FROM users WHERE email = $1`,
         [email]
     );
 
