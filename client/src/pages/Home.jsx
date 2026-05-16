@@ -8,7 +8,9 @@ import FeatureSection from "../components/Home/FeatureSection";
 
 import NewsletterSection from "../components/Home/NewsletterSection";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllProducts } from "../store/slices/productSlice";
+import { useEffect } from "react";
 
 const Index = () => {
   const {
@@ -17,6 +19,40 @@ const Index = () => {
   } = useSelector(
     (state) => state.product
   );
+
+  const dispatch = useDispatch();
+  
+  useEffect(() => {
+    dispatch(fetchAllProducts({
+      category: "",
+      price: "0-10000000",
+      search: "",
+      availability: "",
+      ratings: "",
+      page: "1",
+    }));
+  }, [dispatch]);
+  const { loading } = useSelector((state) => state.product);
+if (loading) {
+     return (
+      <div className="fixed inset-0 bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-[0.4em] text-primary mb-8 select-none">
+            FLINT
+          </h1>
+
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full border-2 border-border" />
+            <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+
+          <p className="text-muted-foreground text-sm tracking-wide">
+            Preparing your experience...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background">

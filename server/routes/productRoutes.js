@@ -49,7 +49,7 @@ router.delete(
   deleteReview
 )
 
-router.get(
+router.post(
   "/ai/recommendation",
   fetchAIFilteredProducts
 )

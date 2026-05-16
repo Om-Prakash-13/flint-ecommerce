@@ -3,7 +3,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ToastContainer } from "react-toastify";
 import MainLayout from "./components/Layout/MainLayout";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { checkAuth } from "./store/slices/authSlice";
 
 // pages
@@ -16,6 +16,8 @@ import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import { fetchAllProducts } from "./store/slices/productSlice";
+import { Loader } from "lucide-react";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -23,6 +25,31 @@ const App = () => {
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
+
+  
+
+  const { isCheckingAuth, authUser } = useSelector((state) => state.auth);
+
+  if ((isCheckingAuth && !authUser)) {
+     return (
+      <div className="fixed inset-0 bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-[0.4em] text-primary mb-8 select-none">
+            FLINT
+          </h1>
+
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full border-2 border-border" />
+            <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+
+          <p className="text-muted-foreground text-sm tracking-wide">
+            Preparing your experience...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ThemeProvider>
@@ -41,7 +68,7 @@ const App = () => {
           </Route>
         </Routes>
         <div className="z-100">
-        <ToastContainer position="top-right" autoClose={3000} />
+          <ToastContainer position="top-right" autoClose={3000} />
         </div>
       </BrowserRouter>
     </ThemeProvider>
