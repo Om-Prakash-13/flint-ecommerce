@@ -1,130 +1,254 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { Facebook, Twitter, Instagram, Mail, MapPin, Phone } from 'lucide-react'
+import React from "react";
+import { Link } from "react-router-dom";
+
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
+    <footer className="bg-background border-t border-border pt-16 pb-8 transition-colors">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* top */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand Column */}
-          <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2 group">
-              <img src="/flint.png" alt="Logo" className="h-8 w-8" />
-              <div className="text-2xl font-bold tracking-tight text-gray-900">
-                F L I N T <span style={{ color: '#ff5252' }}>.</span>
+          {/* brand */}
+
+          <div className="space-y-5">
+            <Link to="/" className="flex items-center gap-3 group">
+              <img
+                src="/flint.png"
+                alt="Flint Logo"
+                className="h-9 w-9 object-contain"
+              />
+
+              <div className="text-2xl font-bold tracking-tight text-foreground">
+                F L I N T <span className="text-primary">.</span>
               </div>
             </Link>
-            <p className="text-gray-500 leading-relaxed">
-              Your one-stop destination for premium fashion, electronics, and lifestyle essentials. Curated for quality and style.
+
+            <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+              Flint delivers premium shopping experiences across electronics,
+              fashion, lifestyle, and modern essentials — curated for quality,
+              performance, and style.
             </p>
-            <div className="flex space-x-4 pt-2">
-              <a href="#" className="text-gray-400 hover:text-[#ff5252] transition-colors">
-                <Facebook className="w-5 h-5" />
+
+            {/* socials */}
+
+            <div className="flex items-center gap-3 pt-1">
+              <a
+                href="#"
+                className="
+                  w-10 h-10 rounded-xl
+                  border border-border
+                  bg-secondary
+                  flex items-center justify-center
+                  text-muted-foreground
+                  hover:text-primary
+                  hover:border-primary/30
+                  transition-all
+                "
+              >
+                <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-[#ff5252] transition-colors">
-                <Twitter className="w-5 h-5" />
+
+              <a
+                href="#"
+                className="
+                  w-10 h-10 rounded-xl
+                  border border-border
+                  bg-secondary
+                  flex items-center justify-center
+                  text-muted-foreground
+                  hover:text-primary
+                  hover:border-primary/30
+                  transition-all
+                "
+              >
+                <Twitter className="w-4 h-4" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-[#ff5252] transition-colors">
-                <Instagram className="w-5 h-5" />
+
+              <a
+                href="#"
+                className="
+                  w-10 h-10 rounded-xl
+                  border border-border
+                  bg-secondary
+                  flex items-center justify-center
+                  text-muted-foreground
+                  hover:text-primary
+                  hover:border-primary/30
+                  transition-all
+                "
+              >
+                <Instagram className="w-4 h-4" />
               </a>
             </div>
           </div>
 
-          {/* Shopping Links */}
+          {/* shop */}
+
           <div>
-            <h3 className="text-gray-900 font-semibold mb-6">Shop</h3>
-            <ul className="space-y-4">
+            <h3 className="text-foreground font-semibold mb-6">Shop</h3>
+
+            <ul className="space-y-4 text-sm">
               <li>
-                <Link to="/products" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/products"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   All Products
                 </Link>
               </li>
+
               <li>
-                <Link to="/new-arrivals" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/products"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   New Arrivals
                 </Link>
               </li>
+
               <li>
-                <Link to="/trending" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/products"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Trending
                 </Link>
               </li>
+
               <li>
-                <Link to="/brands" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/products"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Brands
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Company Links */}
+          {/* company */}
+
           <div>
-            <h3 className="text-gray-900 font-semibold mb-6">Company</h3>
-            <ul className="space-y-4">
+            <h3 className="text-foreground font-semibold mb-6">Company</h3>
+
+            <ul className="space-y-4 text-sm">
               <li>
-                <Link to="/about" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/about"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   About Us
                 </Link>
               </li>
+
               <li>
-                <Link to="/careers" className="text-gray-500 hover:text-[#ff5252] transition-colors">
-                  Careers
+                <Link
+                  to="/contact"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Contact
                 </Link>
               </li>
+
               <li>
-                <Link to="/blog" className="text-gray-500 hover:text-[#ff5252] transition-colors">
-                  Blog
+                <Link
+                  to="/faq"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  FAQ
                 </Link>
               </li>
+
               <li>
-                <Link to="/privacy" className="text-gray-500 hover:text-[#ff5252] transition-colors">
+                <Link
+                  to="/privacy"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
                   Privacy Policy
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* contact */}
+
           <div>
-            <h3 className="text-gray-900 font-semibold mb-6">Contact</h3>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3 text-gray-500">
-                <MapPin className="w-5 h-5 text-[#ff5252] flex-shrink-0 mt-0.5" />
-                <span>123 Market Street, Suite 456<br />San Francisco, CA 94105</span>
+            <h3 className="text-foreground font-semibold mb-6">Contact</h3>
+
+            <ul className="space-y-5 text-sm">
+              <li className="flex items-start gap-3 text-muted-foreground">
+                <div className="w-10 h-10 rounded-xl border border-border bg-secondary flex items-center justify-center shrink-0">
+                  <MapPin className="w-4 h-4 text-primary" />
+                </div>
+
+                <span className="leading-relaxed">
+                  123 Market Street, Suite 456
+                  <br />
+                  San Francisco, CA 94105
+                </span>
               </li>
-              <li className="flex items-center gap-3 text-gray-500">
-                <Phone className="w-5 h-5 text-[#ff5252] flex-shrink-0" />
+
+              <li className="flex items-center gap-3 text-muted-foreground">
+                <div className="w-10 h-10 rounded-xl border border-border bg-secondary flex items-center justify-center shrink-0">
+                  <Phone className="w-4 h-4 text-primary" />
+                </div>
+
                 <span>+1 (555) 123-4567</span>
               </li>
-              <li className="flex items-center gap-3 text-gray-500">
-                <Mail className="w-5 h-5 text-[#ff5252] flex-shrink-0" />
+
+              <li className="flex items-center gap-3 text-muted-foreground">
+                <div className="w-10 h-10 rounded-xl border border-border bg-secondary flex items-center justify-center shrink-0">
+                  <Mail className="w-4 h-4 text-primary" />
+                </div>
+
                 <span>support@flint.com</span>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-400 text-sm">
+        {/* bottom */}
+
+        <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-5">
+          <p className="text-muted-foreground text-sm text-center md:text-left">
             © {new Date().getFullYear()} Flint Marketplace. All rights reserved.
           </p>
-          <div className="flex space-x-6 text-sm">
-            <Link to="/terms" className="text-gray-400 hover:text-gray-600 transition-colors">
+
+          <div className="flex flex-wrap justify-center gap-6 text-sm">
+            <Link
+              to="/terms"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Terms of Service
             </Link>
-            <Link to="/privacy" className="text-gray-400 hover:text-gray-600 transition-colors">
+
+            <Link
+              to="/privacy"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Privacy Policy
             </Link>
-            <Link to="/cookies" className="text-gray-400 hover:text-gray-600 transition-colors">
+
+            <Link
+              to="/cookies"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
               Cookie Policy
             </Link>
           </div>
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

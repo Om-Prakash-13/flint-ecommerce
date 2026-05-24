@@ -1,13 +1,7 @@
-import {
-  Menu,
-  User,
-  ShoppingCart,
-  Sun,
-  Moon,
-  Search,
-} from "lucide-react";
+import { Menu, User, ShoppingCart, Sun, Moon, Search } from "lucide-react";
 
 import { useTheme } from "../../contexts/ThemeContext";
+
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -17,8 +11,13 @@ import {
   toggleSidebar,
 } from "../../store/slices/popupSlice";
 
-const iconBtn =
-  "p-2 rounded-xl hover:bg-secondary active:scale-95 transition-all";
+const iconBtn = `
+    p-2
+    rounded-xl
+    hover:bg-secondary
+    active:scale-95
+    transition-all
+  `;
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -28,10 +27,7 @@ const Navbar = () => {
   const { cart } = useSelector((state) => state.cart);
 
   const cartItemsCount =
-    cart?.reduce(
-      (total, item) => total + item.quantity,
-      0
-    ) || 0;
+    cart?.reduce((total, item) => total + item.quantity, 0) || 0;
 
   return (
     <nav
@@ -46,73 +42,76 @@ const Navbar = () => {
         border-b border-border
       "
     >
-      <div className="relative max-w-7xl mx-auto px-4">
-
-        <div className="flex items-center justify-between h-16">
-
+      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+        <div className="relative flex items-center justify-between h-16">
           {/* left */}
-          <button
-            onClick={() => dispatch(toggleSidebar())}
-            className={iconBtn}
-          >
-            <Menu className="w-6 h-6 text-foreground" />
-          </button>
+          <div className="flex items-center z-10">
+            <button
+              onClick={() => dispatch(toggleSidebar())}
+              className={iconBtn}
+            >
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+            </button>
+          </div>
 
-          {/* true centered logo */}
-          <h1
+          {/* centered logo */}
+          <div
             className="
               absolute
               left-1/2
               -translate-x-1/2
-              text-2xl
-              font-bold
-              tracking-[0.35em]
-              text-primary
+              pointer-events-none
               select-none
             "
           >
-            FLINT.
-          </h1>
+            <h1
+              className="
+                text-lg
+                sm:text-2xl
+                font-bold
+                tracking-[0.22em]
+                sm:tracking-[0.35em]
+                text-primary
+                whitespace-nowrap
+              "
+            >
+              FLINT.
+            </h1>
+          </div>
 
           {/* right */}
-          <div className="flex items-center gap-1">
-
-            <button
-              onClick={toggleTheme}
-              className={iconBtn}
-            >
+          <div className="flex items-center gap-0.5 sm:gap-1 z-10">
+            {/* theme */}
+            <button onClick={toggleTheme} className={iconBtn}>
               {theme === "dark" ? (
-                <Sun className="w-5 h-5 text-foreground" />
+                <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
               ) : (
-                <Moon className="w-5 h-5 text-foreground" />
+                <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
               )}
             </button>
 
+            {/* search */}
             <button
-              onClick={() =>
-                dispatch(toggleSearchBar())
-              }
+              onClick={() => dispatch(toggleSearchBar())}
               className={iconBtn}
             >
-              <Search className="w-5 h-5 text-foreground" />
+              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </button>
 
+            {/* profile */}
             <button
-              onClick={() =>
-                dispatch(toggleAuthPopup())
-              }
+              onClick={() => dispatch(toggleAuthPopup())}
               className={iconBtn}
             >
-              <User className="w-5 h-5 text-foreground" />
+              <User className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </button>
 
+            {/* cart */}
             <button
-              onClick={() =>
-                dispatch(toggleCart())
-              }
-              className={`${iconBtn} relative`}
+              onClick={() => dispatch(toggleCart())}
+              className={`${iconBtn} relative hidden sm:block`}
             >
-              <ShoppingCart className="w-5 h-5 text-foreground" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
 
               {cartItemsCount > 0 && (
                 <span
@@ -123,12 +122,13 @@ const Navbar = () => {
                     flex
                     items-center
                     justify-center
-                    w-5
-                    h-5
+                    min-w-[18px]
+                    h-[18px]
+                    px-1
                     rounded-full
                     bg-primary
                     text-primary-foreground
-                    text-xs
+                    text-[10px]
                     font-medium
                   "
                 >
@@ -136,7 +136,6 @@ const Navbar = () => {
                 </span>
               )}
             </button>
-
           </div>
         </div>
       </div>
