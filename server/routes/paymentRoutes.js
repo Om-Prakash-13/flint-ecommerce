@@ -6,6 +6,6 @@ import { verifyPayment } from "../controllers/paymentController.js";
 const router = express.Router();
 
 router.post("/order", isAuthenticated, createPaymentOrder);
-router.post("/verify", verifyPayment);
+router.post("/verify", isAuthenticated, verifyPayment);
 
 export default router;

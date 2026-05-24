@@ -26,7 +26,7 @@ export const placeNewOrder = catchAsyncError(async (req, res) => {
 
   const normalizedItems = Array.from(mergedItems.values());
 
-  const total_price = await withTransaction(async (client) => {
+  const data = await withTransaction(async (client) => {
     // Fetch products
     const productIds = normalizedItems.map((item) => item.productId);
     const { rows: products } = await client.query(
@@ -83,7 +83,7 @@ export const placeNewOrder = catchAsyncError(async (req, res) => {
 
     // Price calculation
     const tax_price = Number((subtotal * 0.18).toFixed(2));
-    const shipping_price = 2;
+    const shipping_price = subtotal + subtotal * 0.18 < 5000 ? 99 : 0;
     const total_price = Number(
       (subtotal + tax_price + shipping_price).toFixed(2),
     );
@@ -132,13 +132,14 @@ export const placeNewOrder = catchAsyncError(async (req, res) => {
 
     // Update stock ==> do this in the payment verification.
 
-    return total_price;
+    return {orderId, total_price};
   });
 
   return res.status(201).json({
     success: true,
     message: "Order placed successfully. Proceed to payment.",
-    total_price,
+    order_id: data.orderId,
+    total_price: data.total_price
   });
 });
 
@@ -198,15 +199,28 @@ export const fetchMyOrders = catchAsyncError(async (req, res) => {
   const offset = (page - 1) * limit;
   const result = await database.query(
     `
-      SELECT 
-      o.id, o.total_price, o.order_status, o.created_at, 
-      COUNT(oi.id)::INTEGER AS total_items, MIN(oi.image) AS preview_image
+      SELECT
+        o.id,
+        o.total_price,
+        o.order_status,
+        o.created_at,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'product_id', oi.product_id,
+              'quantity', oi.quantity,
+              'price', oi.price,
+              'image', oi.image,
+              'title', oi.title
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'::json
+        ) AS order_items
       FROM orders o
       LEFT JOIN order_items oi
       ON o.id = oi.order_id
-      WHERE
-      o.buyer_id = $1
-      GROUP BY o.id, o.total_price, o.order_status, o.created_at
+      WHERE o.buyer_id = $1
+      GROUP BY o.id
       ORDER BY o.created_at DESC
       LIMIT $2
       OFFSET $3
