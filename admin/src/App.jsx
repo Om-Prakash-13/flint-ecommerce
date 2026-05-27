@@ -17,6 +17,7 @@ import Orders from "./components/Orders";
 import Users from "./components/Users";
 import Profile from "./components/Profile";
 import Products from "./components/Products";
+import Header from "./components/Header";
 import { useEffect } from "react";
 import { getUser } from "./store/slices/authSlice";
 
@@ -49,15 +50,20 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/password/forgot" element={<ForgotPassword />} />
         <Route path="/password/reset/:token" element={<ResetPassword />} />
-        
+
         {/* Protected Admin Route */}
         <Route
           path="/"
           element={
             isAuthenticated && user?.role === "Admin" ? (
-              <div className="flex min-h-screen">
+              <div className="flex min-h-screen bg-zinc-50 text-zinc-900">
                 <SideBar />
-                {renderDashboardContent()}
+                <div className="flex-1 flex flex-col min-h-screen">
+                  <Header />
+                  <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+                    {renderDashboardContent()}
+                  </main>
+                </div>
               </div>
             ) : (
               <Navigate to="/login" replace />
