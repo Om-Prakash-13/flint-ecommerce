@@ -4,15 +4,45 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import SideBar from "./components/SideBar";
+
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import { ToastContainer } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+
+import SideBar from "./components/SideBar";
+import Dashboard from "./components/Dashboard";
+import Orders from "./components/Orders";
+import Users from "./components/Users";
+import Profile from "./components/Profile";
+import Products from "./components/Products";
+import { useEffect } from "react";
+import { getUser } from "./store/slices/authSlice";
 
 function App() {
-  const isAuthenticated = true;
-  const user = {role: "Admin"}
+  const { openedComponent } = useSelector((state) => state.extra);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const renderDashboardContent = () => {
+    switch (openedComponent) {
+      case "Dashboard":
+        return <Dashboard />;
+      case "Orders":
+        return <Orders />;
+      case "Users":
+        return <Users />;
+      case "Profile":
+        return <Profile />;
+      case "Products":
+        return <Products />;
+      default:
+        return <Dashboard />;
+    }
+  };
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getUser());
+  }, []);
   return (
     <Router>
       <Routes>
@@ -27,7 +57,7 @@ function App() {
             isAuthenticated && user?.role === "Admin" ? (
               <div className="flex min-h-screen">
                 <SideBar />
-                {/* {renderDashboardContent()} */}
+                {renderDashboardContent()}
               </div>
             ) : (
               <Navigate to="/login" replace />
