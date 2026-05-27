@@ -21,6 +21,7 @@ import Header from "./components/Header";
 import { useEffect } from "react";
 import { getUser } from "./store/slices/authSlice";
 import { getDashboardStats } from "./store/slices/adminSlice";
+import { fetchAllProducts } from "./store/slices/productsSlice";
 
 function App() {
   const { openedComponent } = useSelector((state) => state.extra);
@@ -46,10 +47,11 @@ function App() {
     dispatch(getUser());
   }, []);
   useEffect(() => {
-    if(isAuthenticated){
+    if (isAuthenticated) {
+      dispatch(fetchAllProducts());
       dispatch(getDashboardStats());
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated]);
   return (
     <Router>
       <Routes>

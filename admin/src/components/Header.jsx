@@ -27,20 +27,13 @@ const Header = () => {
           {/* title */}
           <div className="min-w-0">
             {/* breadcrumb */}
-            <div className="flex items-center gap-2 text-sm">
+            <div className="text-xl flex items-center gap-2">
               <span className="text-zinc-500">Flint Admin</span>
-
               <ChevronRight className="w-4 h-4 text-orange-400" />
-
-              <span className="font-medium text-orange-600 truncate">
+              <span className="font-semibold underline text-orange-600 truncate">
                 {openedComponent}
               </span>
             </div>
-
-            {/* heading */}
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 mt-1">
-              {openedComponent}
-            </h1>
           </div>
         </div>
 
