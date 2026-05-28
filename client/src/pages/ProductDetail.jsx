@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import {
   Star,
@@ -16,10 +16,11 @@ import { useDispatch, useSelector } from "react-redux";
 import ReviewsContainer from "../components/Products/ReviewsContainer";
 
 import { fetchProductDetails } from "../store/slices/productSlice";
+import { addToCart, checkout } from "../store/slices/cartSlice";
 
 const ProductDetail = () => {
   const { id } = useParams();
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const {
@@ -39,7 +40,7 @@ const ProductDetail = () => {
   }, [dispatch, id]);
 
   const handleAddToCart = () => {
-    // dispatch(addToCart({ product, quantity }));
+    dispatch(addToCart({ product, quantity }));
   };
 
   if (loading) {
@@ -201,7 +202,7 @@ const ProductDetail = () => {
             {/* actions */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <button
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart()}
                 disabled={product.stock === 0}
                 className="h-14 rounded-2xl bg-primary text-primary-foreground font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -210,6 +211,10 @@ const ProductDetail = () => {
               </button>
 
               <button
+                onClick={() => {
+                  dispatch(checkout({ product, quantity }));
+                  navigate("/payment");
+                }}
                 disabled={product.stock === 0}
                 className="h-14 rounded-2xl border border-border hover:bg-secondary transition-all font-medium disabled:opacity-50"
               >

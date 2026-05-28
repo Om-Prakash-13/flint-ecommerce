@@ -377,7 +377,7 @@ const Orders = () => {
 
                   {/* actions */}
 
-                  <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-border">
+                  {/* <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-border">
                     <button className="h-10 px-4 rounded-xl border border-border bg-background hover:bg-secondary transition-all text-sm font-medium">
                       View Details
                     </button>
@@ -405,7 +405,7 @@ const Orders = () => {
                         Cancel Order
                       </button>
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))}

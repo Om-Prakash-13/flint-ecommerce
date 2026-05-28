@@ -19,20 +19,61 @@ const saveCartToStorage = (cart) => {
   }
 };
 
+const loadCheckoutItemFromStorage = () => {
+  try {
+    const item = localStorage.getItem("checkoutItem");
+
+    return item ? JSON.parse(item) : null;
+  } catch (error) {
+    console.error("Failed to load checkout item.", error);
+
+    return null;
+  }
+};
+
+const saveCheckoutItemToStorage = (item) => {
+  try {
+    localStorage.setItem("checkoutItem", JSON.stringify(item));
+  } catch (error) {
+    console.error("Failed to save checkout item.", error);
+  }
+};
+
+const clearCheckoutStorage = () => {
+  localStorage.removeItem("checkoutItem");
+};
+
 const cartSlice = createSlice({
   name: "cart",
   initialState: {
     cart: loadCartFromStorage(),
+    checkOutItem: loadCheckoutItemFromStorage(),
   },
 
   reducers: {
+    checkout(state, action) {
+      const { product, quantity = 1 } = action.payload;
+
+      state.checkOutItem = {
+        product,
+        quantity,
+      };
+
+      saveCheckoutItemToStorage(state.checkOutItem);
+    },
+
+    clearCheckOutItem(state) {
+      state.checkOutItem = null;
+
+      clearCheckoutStorage();
+    },
+
     addToCart(state, action) {
       const { product, quantity = 1 } = action.payload;
 
       const existingItem = state.cart.find(
         (item) => item.product.id === product.id,
       );
-      
       if (existingItem) {
         existingItem.quantity = Math.min(
           existingItem.quantity + quantity,
@@ -70,7 +111,13 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, removeFromCart, updateCartQuantity, clearCart } =
-  cartSlice.actions;
+export const {
+  addToCart,
+  removeFromCart,
+  updateCartQuantity,
+  clearCart,
+  checkout,
+  clearCheckOutItem,
+} = cartSlice.actions;
 
 export default cartSlice.reducer;

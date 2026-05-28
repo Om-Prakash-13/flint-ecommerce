@@ -4,7 +4,7 @@ import { axiosInstance } from "../../lib/axios";
 
 import { toast } from "react-toastify";
 
-import { clearCart } from "./cartSlice";
+import { clearCart, clearCheckOutItem } from "./cartSlice";
 
 export const fetchMyOrders = createAsyncThunk(
   "order/orders/me",
@@ -91,6 +91,7 @@ export const startPayment = createAsyncThunk(
               toast.success("Payment Successful");
 
               dispatch(clearCart());
+              dispatch(clearCheckOutItem());
               dispatch(resetCurrentOrder());
 
               if (onSuccess) {

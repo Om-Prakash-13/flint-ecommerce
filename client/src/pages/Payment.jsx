@@ -23,7 +23,7 @@ const Payment = () => {
 
   const { authUser } = useSelector((state) => state.auth);
 
-  const { cart } = useSelector((state) => state.cart);
+  const { cart, checkOutItem } = useSelector((state) => state.cart);
 
   const { orderStep, placingOrder, paymentLoading, currentOrderId } =
     useSelector((state) => state.order);
@@ -44,10 +44,9 @@ const Payment = () => {
     }
   }, [authUser, navigate]);
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0,
-  );
+  const subtotal = checkOutItem
+    ? checkOutItem.product.price * checkOutItem.quantity
+    : cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   const shipping = subtotal >= 5000 ? 0 : 99;
 
@@ -55,7 +54,9 @@ const Payment = () => {
 
   const finalTotal = subtotal + shipping + tax;
 
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = checkOutItem
+    ? checkOutItem.quantity
+    : cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handlePlaceOrder = (e) => {
     e.preventDefault();
@@ -63,12 +64,17 @@ const Payment = () => {
     dispatch(
       placeOrder({
         shippingInfo: shippingDetails,
-
-        orderItems: cart.map((item) => ({
-          productId: item.product.id,
-
-          quantity: item.quantity,
-        })),
+        orderItems: checkOutItem
+          ? [
+              {
+                productId: checkOutItem.product.id,
+                quantity: checkOutItem.quantity,
+              },
+            ]
+          : cart.map((item) => ({
+              productId: item.product.id,
+              quantity: item.quantity,
+            })),
       }),
     );
   };
@@ -77,15 +83,14 @@ const Payment = () => {
     dispatch(
       startPayment({
         shippingDetails,
-
         onSuccess: () => {
           navigate("/orders?success=true");
         },
       }),
     );
   };
-
-  if (cart.length === 0) {
+  console.log(checkOutItem);
+  if (checkOutItem === null && cart.length === 0) {
     return (
       <div className="min-h-screen bg-background pt-24 px-4 flex items-center justify-center">
         <div className="max-w-md w-full rounded-[32px] border border-border bg-background p-10 text-center">

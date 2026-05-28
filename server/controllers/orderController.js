@@ -204,6 +204,7 @@ export const fetchMyOrders = catchAsyncError(async (req, res) => {
         o.total_price,
         o.order_status,
         o.created_at,
+        o.paid_at,
         COALESCE(
           json_agg(
             json_build_object(
@@ -220,6 +221,7 @@ export const fetchMyOrders = catchAsyncError(async (req, res) => {
       LEFT JOIN order_items oi
       ON o.id = oi.order_id
       WHERE o.buyer_id = $1
+      AND o.paid_at IS NOT NULL
       GROUP BY o.id
       ORDER BY o.created_at DESC
       LIMIT $2
@@ -306,6 +308,8 @@ export const fetchAllOrders = catchAsyncError(async (req, res) => {
     LEFT JOIN order_items oi 
         ON o.id = oi.order_id
       
+    WHERE o.paid_at IS NOT NULL
+        
     GROUP BY 
         o.id,
         u.id,
