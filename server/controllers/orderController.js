@@ -132,14 +132,14 @@ export const placeNewOrder = catchAsyncError(async (req, res) => {
 
     // Update stock ==> do this in the payment verification.
 
-    return {orderId, total_price};
+    return { orderId, total_price };
   });
 
   return res.status(201).json({
     success: true,
     message: "Order placed successfully. Proceed to payment.",
     order_id: data.orderId,
-    total_price: data.total_price
+    total_price: data.total_price,
   });
 });
 
@@ -254,21 +254,66 @@ export const fetchAllOrders = catchAsyncError(async (req, res) => {
   const result = await database.query(
     `
     SELECT 
-      o.id, 
-      o.total_price, 
-      o.order_status, 
-      o.created_at,
-      u.id AS buyer_id, 
-      u.name AS buyer_name, 
-      u.email AS buyer_email,
-      COUNT(oi.id)::INTEGER AS total_items,
-      MIN(oi.image) AS preview_image
+        o.id,
+        o.total_price,
+        o.tax_price,
+        o.shipping_price,
+        o.order_status,
+        o.paid_at,
+        o.created_at,
+      
+        -- Buyer Info
+        json_build_object(
+            'id', u.id,
+            'name', u.name,
+            'email', u.email
+        ) AS buyer,
+      
+        -- Shipping Info
+        json_build_object(
+            'fullName', si.full_name,
+            'state', si.state,
+            'city', si.city,
+            'country', si.country,
+            'address', si.address,
+            'pincode', si.pincode,
+            'phone', si.phone
+        ) AS shipping_info,
+      
+        -- Order Items
+        COALESCE(
+            json_agg(
+                json_build_object(
+                    'id', oi.id,
+                    'productId', oi.product_id,
+                    'title', oi.title,
+                    'image', oi.image,
+                    'quantity', oi.quantity,
+                    'price', oi.price
+                )
+            ) FILTER (WHERE oi.id IS NOT NULL),
+            '[]'
+        ) AS order_items
+      
     FROM orders o
-    JOIN users u ON o.buyer_id = u.id
-    LEFT JOIN order_items oi ON o.id = oi.order_id
-    GROUP BY o.id, u.id
+      
+    JOIN users u 
+        ON o.buyer_id = u.id
+      
+    LEFT JOIN shipping_info si 
+        ON o.id = si.order_id
+      
+    LEFT JOIN order_items oi 
+        ON o.id = oi.order_id
+      
+    GROUP BY 
+        o.id,
+        u.id,
+        si.id
+      
     ORDER BY o.created_at DESC
-    LIMIT $1 OFFSET $2
+      
+    LIMIT $1 OFFSET $2;
     `,
     [limit, offset],
   );
@@ -298,7 +343,7 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
   // 1. Fetch order
   const { rows } = await database.query(
     `SELECT id, buyer_id, order_status FROM orders WHERE id = $1`,
-    [orderId]
+    [orderId],
   );
 
   if (rows.length === 0) {
@@ -313,10 +358,13 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
   }
 
   // 3. Check for finished states
-  if (order.order_status === "Delivered" || order.order_status === "Cancelled") {
+  if (
+    order.order_status === "Delivered" ||
+    order.order_status === "Cancelled"
+  ) {
     throw new FlintError(
       `${order.order_status} orders cannot be updated.`,
-      400
+      400,
     );
   }
 
@@ -337,15 +385,15 @@ export const updateOrderStatus = catchAsyncError(async (req, res) => {
   if (!allowedNextStatuses.includes(order_status)) {
     throw new FlintError(
       `Invalid status transition from ${order.order_status} to ${order_status}.`,
-      400
+      400,
     );
   }
 
   // 6. Update database
-  await database.query(
-    `UPDATE orders SET order_status = $1 WHERE id = $2`,
-    [order_status, orderId]
-  );
+  await database.query(`UPDATE orders SET order_status = $1 WHERE id = $2`, [
+    order_status,
+    orderId,
+  ]);
 
   return res.status(200).json({
     success: true,
